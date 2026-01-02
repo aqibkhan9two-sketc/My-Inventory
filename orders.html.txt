@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Orders - MyStock</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e1e2d;
+            --accent: #2563EB;
+            --success: #27ae60;
+            --danger: #ef4444;
+            --light: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f4f7fe;
+            color: #2d3436;
+            display: flex;
+        }
+
+        /* Sidebar Theme */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: var(--primary);
+            color: #a2a3b7;
+            padding: 25px;
+            position: fixed;
+            z-index: 1000;
+            transition: 0.3s;
+        }
+
+        .sidebar h2 {
+            color: white;
+            font-weight: 800;
+            margin-bottom: 40px;
+            font-size: 22px;
+        }
+
+        .sidebar h2 span {
+            color: var(--success);
+        }
+
+        .sidebar a {
+            display: block;
+            color: #a2a3b7;
+            text-decoration: none;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: rgba(67, 97, 238, 0.15);
+            color: white;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 30px;
+            width: calc(100% - 260px);
+        }
+
+        .filter-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        input,
+        select {
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: white;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 12px;
+            padding: 15px 15px;
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 15px;
+            font-size: 13px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .btn-new {
+            background: var(--accent);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            float: right;
+            margin-left: 10px;
+        }
+
+        .btn-export {
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            float: right;
+        }
+
+        .btn-submit {
+            background: var(--accent);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 900px;
+            border-radius: 16px;
+        }
+
+        .order-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .calc-bar {
+            display: flex;
+            justify-content: space-around;
+            background: #1e293b;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-icon {
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-edit { background: #dbeafe; color: #2563eb; }
+        .btn-del { background: #fee2e2; color: #dc2626; }
+
+        .status-dropdown {
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: none;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .st-shipped { background: #fef3c7; color: #92400e; }
+        .st-delivered { background: #dcfce7; color: #166534; }
+        .st-ontheway { background: #dbeafe; color: #1e40af; }
+        .st-refund { background: #f3e8ff; color: #6b21a8; }
+        .st-cancelled { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <h2>Rubell<span>Walmart</span></h2>
+        <a href="index.html">📊 Dashboard</a>
+        <a href="stock.html">📈 Live Stock</a>
+        <a href="orders.html" class="active">🛒 Orders</a>
+        <a href="purchases.html">💰 Purchases</a>
+        <a href="products.html">📦 Products</a>
+        <a href="clients.html">👥 Clients</a>
+        <a href="warehouse.html">🏠 Warehouses</a>
+    </div>
+
+    <div class="main-content">
+        <div style="overflow: hidden; margin-bottom: 20px;">
+            <h1 style="float: left; margin: 0;">🛒 Orders Management</h1>
+            <button class="btn-new" onclick="openOrderModal()">+ New Order Entry</button>
+            <button class="btn-export" id="exportBtn"><i class="fas fa-file-csv"></i> Export CSV</button>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-group">
+                <label>From Date</label>
+                <input type="date" id="dateFrom">
+            </div>
+            <div class="filter-group">
+                <label>To Date</label>
+                <input type="date" id="dateTo">
+            </div>
+            <div class="filter-group">
+                <label>Filter Client</label>
+                <select id="clientFilter">
+                    <option value="">All Clients</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Status</label>
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Delivered">Delivered</option>
+                    <option value="On The Way">On The Way</option>
+                    <option value="Refund">Refund</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="filter-group" style="flex: 2;">
+                <label>Search Everything</label>
+                <input type="text" id="searchInput" placeholder="Search SKU, Order ID, Label, or Customer...">
+            </div>
+        </div>
+
+        <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <table id="mainOrderTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Account</th>
+                        <th>Product</th>
+                        <th>Link</th>
+                        <th>SKU</th>
+                        <th>Order ID</th>
+                        <th>Label</th>
+                        <th>WH</th>
+                        <th>Qty</th>
+                        <th>Profit</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="orderTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">🛒 Order Entry</h2>
+            <form id="orderForm">
+                <input type="hidden" id="editOrderId">
+                <div class="order-grid">
+                    <div class="filter-group"><label>Date</label><input type="date" id="ordDate" required></div>
+                    <div class="filter-group"><label>Account (Client)</label><select id="ordClient" required></select></div>
+                    <div class="filter-group"><label>SKU</label><input type="text" id="ordSKU" list="skuList" required><datalist id="skuList"></datalist></div>
+                </div>
+
+                <div id="skuStatus" style="display:none; background:#eff6ff; padding:15px; border-radius:8px; margin:15px 0; border-left:4px solid var(--accent);">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span><strong>Product:</strong> <span id="stkName">-</span></span>
+                        <span><strong>Avg Cost:</strong> $<span id="stkCost">0</span></span>
+                        <span><strong>Total Stock:</strong> <b id="stkTotal">0</b></span>
+                    </div>
+                    <div id="whBreakdown" style="margin-top: 10px; font-size: 11px; color: #1e40af; border-top: 1px solid #dbeafe; padding-top: 5px;"></div>
+                </div>
+
+                <div class="order-grid">
+                    <div class="filter-group"><label>Order ID</label><input type="text" id="ordID" required></div>
+                    <div class="filter-group"><label>Customer Name</label><input type="text" id="custName"></div>
+                    <div class="filter-group"><label>Shipping Label</label><input type="text" id="ordLabelID"></div>
+                </div>
+
+                <div class="order-grid">
+                    <div class="filter-group"><label>Qty</label><input type="number" id="ordQty" value="1" min="1"></div>
+                    <div class="filter-group"><label>Warehouse</label><select id="ordWH" required></select></div>
+                    <div class="filter-group"><label>Selling Price ($)</label><input type="number" id="sellPrice" step="0.01"></div>
+                </div>
+
+                <div class="order-grid">
+                    <div class="filter-group"><label>Label Cost</label><input type="number" id="costLabel" value="0"></div>
+                    <div class="filter-group"><label>Surcharge</label><input type="number" id="costSurcharge" value="0"></div>
+                    <div class="filter-group"><label>3PL Cost</label><input type="number" id="cost3PL" value="0"></div>
+                </div>
+
+                <div class="calc-bar">
+                    <span>Cost: <b id="valTotalCost">$0.00</b></span>
+                    <span>Fee (15%): <b id="valFee">$0.00</b></span>
+                    <span>Profit: <b id="valProfit">$0.00</b></span>
+                    <span>ROI: <b id="valROI">0%</b></span>
+                </div>
+
+                <div style="margin-top:20px; display:flex; gap:10px;">
+                    <button type="button" class="btn-submit" id="submitOrder">Save Order</button>
+                    <button type="button" onclick="closeOrderModal()" style="background:#64748b; color:white; border:none; padding:15px; border-radius:8px; cursor:pointer;">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, serverTimestamp, query, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTxU9U4OW_xaEV3WZnSrpdM9Lal8TBN5c",
+            authDomain: "my-inventory-app-4c806.firebaseapp.com",
+            projectId: "my-inventory-app-4c806",
+            storageBucket: "my-inventory-app-4c806.firebasestorage.app",
+            messagingSenderId: "258251635272",
+            appId: "1:258251635272:web:597ea77880c4ff3ef3767d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let globalProducts = [], globalPurchases = [], globalWarehouses = [], allOrders = [], currentlyFilteredOrders = [];
+        let currentStockData = {};
+
+        // Data Loading
+        onSnapshot(collection(db, 'clients'), s => {
+            let options = '<option value="">Select Client</option>';
+            s.forEach(d => {
+                const data = d.data();
+                const name = data.name || data.clientName || data.Account || data.accountName;
+                if (name) options += `<option value="${name}">${name}</option>`;
+            });
+            document.getElementById('clientFilter').innerHTML = '<option value="">All Clients</option>' + options;
+            document.getElementById('ordClient').innerHTML = options;
+        });
+
+        onSnapshot(collection(db, 'warehouses'), s => {
+            globalWarehouses = s.docs.map(d => d.data().name);
+            updateWarehouseDropdown({});
+        });
+
+        onSnapshot(collection(db, 'products'), s => {
+            globalProducts = s.docs.map(d => ({ id: d.id, ...d.data() }));
+            let h = '';
+            globalProducts.forEach(p => h += `<option value="${p.sku}">${p.name}</option>`);
+            document.getElementById('skuList').innerHTML = h;
+        });
+
+        onSnapshot(collection(db, 'purchases'), s => { globalPurchases = s.docs.map(d => d.data()); });
+
+        // NEW: Filter Logic with Date Range
+        window.applyFilters = () => {
+            const fromDate = document.getElementById('dateFrom').value;
+            const toDate = document.getElementById('dateTo').value;
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const status = document.getElementById('statusFilter').value;
+            const client = document.getElementById('clientFilter').value;
+
+            currentlyFilteredOrders = allOrders.filter(o => {
+                const matchSearch = (o.sku || '').toLowerCase().includes(search) ||
+                    (o.orderID || '').toLowerCase().includes(search) ||
+                    (o.shippingLabel || '').toLowerCase().includes(search) ||
+                    (o.customerName || '').toLowerCase().includes(search);
+                const matchStatus = !status || o.status === status;
+                const matchClient = !client || o.client === client;
+                
+                // Date Range Check
+                let matchDate = true;
+                if (fromDate && o.date < fromDate) matchDate = false;
+                if (toDate && o.date > toDate) matchDate = false;
+
+                return matchSearch && matchStatus && matchClient && matchDate;
+            });
+            renderTable(currentlyFilteredOrders);
+        };
+
+        function renderTable(orders) {
+            let rows = '';
+            orders.forEach(o => {
+                const sClass = o.status === 'Delivered' ? 'st-delivered' :
+                    (o.status === 'Shipped' ? 'st-shipped' :
+                        (o.status === 'Refund' ? 'st-refund' :
+                            (o.status === 'Cancelled' ? 'st-cancelled' : 'st-ontheway')));
+
+                const prod = globalProducts.find(p => p.sku === o.sku);
+                const link = prod?.productLink || prod?.link || '';
+
+                rows += `<tr>
+                    <td>${o.date}</td>
+                    <td>${o.client || '-'}</td>
+                    <td>${o.productName || '-'}</td>
+                    <td>${link ? `<a href="${link}" target="_blank">🔗</a>` : '-'}</td>
+                    <td>${o.sku}</td>
+                    <td><b>${o.orderID}</b></td>
+                    <td>${o.shippingLabel || '-'}</td>
+                    <td>${o.warehouse || '-'}</td>
+                    <td>${o.qty}</td>
+                    <td style="font-weight:bold; color:${o.profit >= 0 ? '#166534' : '#dc2626'}">$${(o.profit || 0).toFixed(2)}</td>
+                    <td>
+                        <select class="status-dropdown ${sClass}" onchange="updateStatus('${o.id}', this.value)">
+                            <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                            <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                            <option value="On The Way" ${o.status === 'On The Way' ? 'selected' : ''}>On The Way</option>
+                            <option value="Refund" ${o.status === 'Refund' ? 'selected' : ''}>Refund</option>
+                            <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </td>
+                    <td class="action-btns">
+                        <button class="btn-icon btn-edit" onclick="editOrder('${o.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon btn-del" onclick="deleteOrder('${o.id}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('orderTableBody').innerHTML = rows || '<tr><td colspan="12" style="text-align:center">No records found</td></tr>';
+        }
+
+        // Export CSV Function
+        document.getElementById('exportBtn').onclick = () => {
+            if (currentlyFilteredOrders.length === 0) {
+                alert("No data to export.");
+                return;
+            }
+            const headers = ["Date", "Client", "Product", "SKU", "Order ID", "Label", "Warehouse", "Qty", "Profit", "Status"];
+            const csvRows = [headers.join(",")];
+            currentlyFilteredOrders.forEach(o => {
+                const row = [o.date, `"${o.client || '-'}"`, `"${o.productName || '-'}"`, `"${o.sku}"`, `"${o.orderID}"`, `"${o.shippingLabel || '-'}"`, `"${o.warehouse || '-'}"`, o.qty, o.profit.toFixed(2), o.status];
+                csvRows.push(row.join(","));
+            });
+            const blob = new Blob([csvRows.join("\n")], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `Orders_${new Date().toISOString().split('T')[0]}.csv`);
+            a.click();
+        };
+
+        const q = query(collection(db, 'orders'), orderBy('date', 'desc'));
+        onSnapshot(q, (snap) => {
+            allOrders = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            applyFilters();
+        });
+
+        // Event Listeners for Filters
+        ['dateFrom', 'dateTo', 'statusFilter', 'clientFilter'].forEach(id => {
+            document.getElementById(id).onchange = applyFilters;
+        });
+        document.getElementById('searchInput').oninput = applyFilters;
+
+        // Modal & Form Logic (Preserved from your original code)
+        window.openOrderModal = () => {
+            document.getElementById('orderForm').reset();
+            document.getElementById('editOrderId').value = "";
+            document.getElementById('skuStatus').style.display = 'none';
+            document.getElementById('orderModal').style.display = 'block';
+            document.getElementById('ordDate').valueAsDate = new Date();
+            calculateAll();
+        };
+        window.closeOrderModal = () => document.getElementById('orderModal').style.display = 'none';
+
+        function calculateAll() {
+            const qty = +document.getElementById('ordQty').value || 0;
+            const avgCost = +document.getElementById('stkCost').innerText || 0;
+            const sellPrice = +document.getElementById('sellPrice').value || 0;
+            const label = +document.getElementById('costLabel').value || 0;
+            const surcharge = +document.getElementById('costSurcharge').value || 0;
+            const thirdPL = +document.getElementById('cost3PL').value || 0;
+            const totalCost = (avgCost * qty) + label + surcharge + thirdPL;
+            const revenue = sellPrice * qty;
+            const fee = revenue * 0.15;
+            const profit = (revenue - fee) - totalCost;
+            const roi = totalCost > 0 ? (profit / totalCost) * 100 : 0;
+            document.getElementById('valTotalCost').innerText = `$${totalCost.toFixed(2)}`;
+            document.getElementById('valFee').innerText = `$${fee.toFixed(2)}`;
+            document.getElementById('valProfit').innerText = `$${profit.toFixed(2)}`;
+            document.getElementById('valROI').innerText = roi.toFixed(1) + '%';
+        }
+
+        function updateWarehouseDropdown(whData) {
+            let h = '<option value="">Select WH</option>';
+            globalWarehouses.forEach(wh => {
+                const stock = whData[wh] || 0;
+                h += stock <= 0 ? `<option value="${wh}" disabled style="color:red;">${wh} (Out of Stock)</option>` : `<option value="${wh}">${wh} (Available: ${stock})</option>`;
+            });
+            document.getElementById('ordWH').innerHTML = h;
+        }
+
+        document.getElementById('ordSKU').addEventListener('input', (e) => {
+            const prod = globalProducts.find(p => p.sku === e.target.value);
+            if (prod) {
+                document.getElementById('skuStatus').style.display = 'block';
+                document.getElementById('stkName').innerText = prod.name;
+                const purchases = globalPurchases.filter(p => p.sku === prod.sku);
+                const orders = allOrders.filter(o => o.sku === prod.sku && o.id !== document.getElementById('editOrderId').value);
+                let whData = {};
+                globalWarehouses.forEach(wh => whData[wh] = 0);
+                purchases.forEach(p => { if (whData[p.warehouse] !== undefined) whData[p.warehouse] += (+p.qty || 0); });
+                orders.forEach(o => { if (whData[o.warehouse] !== undefined) whData[o.warehouse] -= (+o.qty || 0); });
+                currentStockData = whData;
+                updateWarehouseDropdown(whData);
+                let total = 0, b = '<b>Warehouse Stock:</b> ';
+                for (let wh in whData) { b += `${wh}: [${whData[wh]}] | `; total += whData[wh]; }
+                const spend = purchases.reduce((s, p) => s + (+p.totalAmount || 0), 0);
+                const tin = purchases.reduce((s, p) => s + (+p.qty || 0), 0);
+                document.getElementById('whBreakdown').innerHTML = b;
+                document.getElementById('stkCost').innerText = tin > 0 ? (spend / tin).toFixed(2) : "0.00";
+                document.getElementById('stkTotal').innerText = total;
+                calculateAll();
+            }
+        });
+
+        document.getElementById('ordWH').addEventListener('change', (e) => {
+            document.getElementById('ordQty').max = currentStockData[e.target.value] || 0;
+            calculateAll();
+        });
+
+        ['ordQty', 'sellPrice', 'costLabel', 'costSurcharge', 'cost3PL'].forEach(id => {
+            document.getElementById(id).addEventListener('input', calculateAll);
+        });
+
+        document.getElementById('submitOrder').onclick = async () => {
+            const wh = document.getElementById('ordWH').value;
+            if (!wh || +document.getElementById('ordQty').value > (currentStockData[wh] || 0)) { alert("Check Warehouse/Stock!"); return; }
+            const editId = document.getElementById('editOrderId').value;
+            const data = {
+                date: document.getElementById('ordDate').value,
+                client: document.getElementById('ordClient').value,
+                sku: document.getElementById('ordSKU').value,
+                productName: document.getElementById('stkName').innerText,
+                orderID: document.getElementById('ordID').value,
+                customerName: document.getElementById('custName').value,
+                shippingLabel: document.getElementById('ordLabelID').value,
+                qty: +document.getElementById('ordQty').value,
+                warehouse: wh,
+                sellPrice: +document.getElementById('sellPrice').value,
+                profit: parseFloat(document.getElementById('valProfit').innerText.replace('$', '')),
+                status: "Shipped",
+                updatedAt: serverTimestamp()
+            };
+            try {
+                editId ? await updateDoc(doc(db, 'orders', editId), data) : await addDoc(collection(db, 'orders'), data);
+                document.getElementById('orderForm').reset();
+                document.getElementById('skuStatus').style.display = 'none';
+                alert("Order Saved!");
+            } catch (e) { console.error(e); }
+        };
+
+        window.updateStatus = async (id, val) => await updateDoc(doc(db, 'orders', id), { status: val });
+        window.deleteOrder = async (id) => { if (confirm("Delete?")) await deleteDoc(doc(db, 'orders', id)); };
+        window.editOrder = async (id) => {
+            const o = (await getDoc(doc(db, 'orders', id))).data();
+            openOrderModal();
+            document.getElementById('editOrderId').value = id;
+            document.getElementById('ordDate').value = o.date;
+            document.getElementById('ordClient').value = o.client;
+            document.getElementById('ordSKU').value = o.sku;
+            document.getElementById('ordID').value = o.orderID;
+            document.getElementById('custName').value = o.customerName || "";
+            document.getElementById('ordLabelID').value = o.shippingLabel;
+            document.getElementById('ordQty').value = o.qty;
+            document.getElementById('sellPrice').value = o.sellPrice;
+            document.getElementById('ordSKU').dispatchEvent(new Event('input'));
+            setTimeout(() => { document.getElementById('ordWH').value = o.warehouse; calculateAll(); }, 500);
+        };
+    </script>
+</body>
+
+</html>

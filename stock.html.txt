@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Live Stock - MyStock</title>
+    <style>
+        :root {
+            --primary: #1e1e2d;
+            --success: #2ecc71;
+            --bg: #f4f7fa;
+            --sidebar: #1e1e2d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: #2d3436;
+            display: flex;
+            /* Sidebar ko side par rakhne ke liye */
+        }
+
+        /* Sidebar Theme - New */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: var(--primary);
+            color: #a2a3b7;
+            padding: 25px;
+            position: fixed;
+            z-index: 1000;
+            transition: 0.3s;
+        }
+
+        .sidebar h2 {
+            color: white;
+            font-weight: 800;
+            margin-bottom: 40px;
+            font-size: 22px;
+        }
+
+        .sidebar h2 span {
+            color: var(--success);
+        }
+
+        .sidebar a {
+            display: block;
+            color: #a2a3b7;
+            text-decoration: none;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: rgba(67, 97, 238, 0.15);
+            color: white;
+        }
+
+        .main-content {
+            margin-left: 240px;
+            padding: 25px;
+            width: calc(100% - 260px);
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Filter Section Styling */
+        .filter-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-item label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        input,
+        select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1300px;
+        }
+
+        th,
+        td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        /* Center Aligning Numbers */
+        .text-center {
+            text-align: center !important;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #333;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        .qty-box {
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 4px;
+            display: inline-block;
+            min-width: 30px;
+        }
+
+        .purchased {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .orders {
+            background: #fbe9e7;
+            color: #d84315;
+        }
+
+        .balance {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .avg-cost {
+            color: #8e44ad;
+            font-weight: bold;
+        }
+
+        .wh-col {
+            background: #fff9c4;
+            color: #f57f17;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>Rubell<span>Walmart</span></h2>
+        <a href="index.html">📊 Dashboard</a>
+        <a href="stock.html" class="active">📈 Live Stock</a>
+        <a href="orders.html">🛒 Orders</a>
+        <a href="purchases.html">💰 Purchases</a>
+        <a href="products.html">📦 Products</a>
+        <a href="clients.html">👥 Clients</a>
+        <a href="warehouse.html">🏠 Warehouses</a>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h1>📦 Live Inventory Stock</h1>
+                <div id="lastSync" style="font-size: 12px; color: #888;">Updating in real-time...</div>
+            </div>
+
+            <div class="filter-container">
+                <div class="filter-item" style="width: 200px;">
+                    <label>Filter by Prefix</label>
+                    <select id="prefixFilter" onchange="filterStockTable()">
+                        <option value="">All Prefixes</option>
+                    </select>
+                </div>
+                <div class="filter-item" style="flex: 1;">
+                    <label>Search Product / SKU</label>
+                    <input type="text" id="stockSearch" placeholder="Enter SKU or Product Name..."
+                        onkeyup="filterStockTable()">
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr id="tableHeaderRow">
+                            <th>SKU</th>
+                            <th>Product Name</th>
+                            <th class="text-center">Purchased</th>
+                            <th class="text-center">Orders</th>
+                            <th class="text-center">Balance</th>
+                            <th class="text-center">Avg Cost</th>
+                            <th>Product Link</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTxU9U4OW_xaEV3WZnSrpdM9Lal8TBN5c",
+            authDomain: "my-inventory-app-4c806.firebaseapp.com",
+            projectId: "my-inventory-app-4c806",
+            storageBucket: "my-inventory-app-4c806.firebasestorage.app",
+            messagingSenderId: "258251635272",
+            appId: "1:258251635272:web:597ea77880c4ff3ef3767d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Filter Function without touching data logic
+        window.filterStockTable = () => {
+            const searchVal = document.getElementById('stockSearch').value.toUpperCase();
+            const prefixVal = document.getElementById('prefixFilter').value.toUpperCase();
+            const rows = document.querySelectorAll('#stockTableBody tr');
+
+            rows.forEach(row => {
+                const skuText = row.cells[0].innerText.toUpperCase();
+                const nameText = row.cells[1].innerText.toUpperCase();
+
+                const matchesSearch = skuText.includes(searchVal) || nameText.includes(searchVal);
+                const matchesPrefix = prefixVal === "" || skuText.startsWith(prefixVal);
+
+                row.style.display = (matchesSearch && matchesPrefix) ? "" : "none";
+            });
+        };
+
+        function loadStockData() {
+            onSnapshot(collection(db, 'warehouses'), (whSnap) => {
+                const warehouses = whSnap.docs.map(d => d.data().name);
+
+                // Setup Prefix Dropdown from SKU list (optional but helpful)
+                // For now, we'll keep it simple as per your request.
+
+                let headerHTML = `
+                <th>SKU</th>
+                <th>Product Name</th>
+                <th class="text-center">Purchased (Total)</th>
+                <th class="text-center">Orders (Total)</th>
+                <th class="text-center">Balance (Live)</th>
+                <th class="text-center">Avg Cost (Unit)</th>`;
+
+                warehouses.forEach(wh => {
+                    headerHTML += `<th class="wh-col text-center">${wh.toUpperCase()}</th>`;
+                });
+                headerHTML += `<th>Product Link</th>`;
+
+                const thead = document.querySelector('thead tr');
+                if (thead) thead.innerHTML = headerHTML;
+
+                onSnapshot(collection(db, 'products'), (prodSnap) => {
+                    // Populate Prefix Filter
+                    const prefixes = new Set();
+                    prodSnap.docs.forEach(d => {
+                        const sku = d.data().sku || "";
+                        if (sku.includes('-')) prefixes.add(sku.split('-')[0]);
+                    });
+                    let prefOptions = '<option value="">All Prefixes</option>';
+                    prefixes.forEach(p => prefOptions += `<option value="${p}">${p}</option>`);
+                    document.getElementById('prefixFilter').innerHTML = prefOptions;
+
+                    onSnapshot(collection(db, 'purchases'), (purSnap) => {
+                        onSnapshot(collection(db, 'orders'), (ordSnap) => {
+                            const allPurchases = purSnap.docs.map(d => d.data());
+                            const allOrders = ordSnap.docs ? ordSnap.docs.map(d => d.data()) : [];
+                            let rows = '';
+
+                            prodSnap.docs.forEach(doc => {
+                                const product = doc.data();
+                                const sku = product.sku;
+                                const skuPurchases = allPurchases.filter(p => p.sku === sku);
+
+                                const totalQtyIn = skuPurchases.reduce((sum, p) => sum + (+p.qty || 0), 0);
+                                const totalSpend = skuPurchases.reduce((sum, p) => sum + (+p.totalAmount || 0), 0);
+                                const totalQtyOut = allOrders.filter(o => o.sku === sku).reduce((sum, o) => sum + (+o.qty || 0), 0);
+
+                                const balance = totalQtyIn - totalQtyOut;
+                                const avgCost = totalQtyIn > 0 ? (totalSpend / totalQtyIn).toFixed(2) : "0.00";
+
+                                let whColumnsHTML = '';
+                                warehouses.forEach(whName => {
+                                    const whIn = skuPurchases.filter(p => p.warehouse === whName).reduce((sum, p) => sum + (+p.qty || 0), 0);
+                                    const whOut = allOrders.filter(o => o.sku === sku && o.warehouse === whName).reduce((sum, o) => sum + (+o.qty || 0), 0);
+                                    const whFinalBalance = whIn - whOut;
+                                    whColumnsHTML += `<td class="wh-col text-center">${whFinalBalance}</td>`;
+                                });
+
+                                rows += `
+                                <tr>
+                                    <td><strong>${sku}</strong></td>
+                                    <td>${product.name}</td>
+                                    <td class="text-center"><span class="qty-box purchased">${totalQtyIn}</span></td>
+                                    <td class="text-center"><span class="qty-box orders">${totalQtyOut}</span></td>
+                                    <td class="text-center"><span class="qty-box balance">${balance}</span></td>
+                                    <td class="avg-cost text-center">$${avgCost}</td>
+                                    ${whColumnsHTML}
+                                    <td><a href="${product.link || '#'}" target="_blank" style="color:#3498db; text-decoration:none;">Open Link</a></td>
+                                </tr>`;
+                            });
+
+                            document.getElementById('stockTableBody').innerHTML = rows || '<tr><td colspan="20" style="text-align:center;">No inventory data found.</td></tr>';
+                            document.getElementById('lastSync').innerText = "Last Updated: " + new Date().toLocaleTimeString();
+
+                            // Re-apply filters after data update
+                            filterStockTable();
+                        });
+                    });
+                });
+            });
+        }
+
+        loadStockData();
+    </script>
+</body>
+
+</html>
