@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Warehouses - MyStock</title>
+    <style>
+        :root {
+            --primary: #1e1e2d;
+            --success: #2ecc71;
+            --bg: #f4f7fa;
+            --sidebar: #1e1e2d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: #2d3436;
+            display: flex;
+            /* Sidebar ko side par rakhne ke liye */
+        }
+
+        /* Sidebar Theme - New */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: var(--primary);
+            color: #a2a3b7;
+            padding: 25px;
+            position: fixed;
+            z-index: 1000;
+            transition: 0.3s;
+        }
+
+        .sidebar h2 {
+            color: white;
+            font-weight: 800;
+            margin-bottom: 40px;
+            font-size: 22px;
+        }
+
+        .sidebar h2 span {
+            color: var(--success);
+        }
+
+        .sidebar a {
+            display: block;
+            color: #a2a3b7;
+            text-decoration: none;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: rgba(67, 97, 238, 0.15);
+            color: white;
+        }
+
+        .main-content {
+            margin-left: 240px;
+            padding: 25px;
+            width: calc(100% - 260px);
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            width: 450px;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            font-size: 13px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .btn-open {
+            background: #27ae60;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .btn-save {
+            background: #27ae60;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #666;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        .btn-remove {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>Rubell<span>Walmart</span></h2>
+        <a href="index.html">📊 Dashboard</a>
+        <a href="stock.html">📈 Live Stock</a>
+        <a href="orders.html">🛒 Orders</a>
+        <a href="purchases.html">💰 Purchases</a>
+        <a href="products.html">📦 Products</a>
+        <a href="clients.html">👥 Clients</a>
+        <a href="warehouse.html" class="active">🏠 Warehouses</a>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <div style="display:flex; justify-content: space-between; align-items: center;">
+                <h1>📍 Registered Warehouses</h1>
+                <button class="btn-open" onclick="openWHModal()">+ Add New Warehouse</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Warehouse Name</th>
+                        <th>Contact Person</th>
+                        <th>Zip Code</th>
+                        <th>Details</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="whDisplayTable">
+                    <tr>
+                        <td colspan="5" style="text-align:center;">Loading warehouses...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="whModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-top:0;">Register Warehouse</h2>
+
+            <div class="form-group">
+                <label>Warehouse Name</label>
+                <input type="text" id="whName" class="input-field" placeholder="e.g. Florida Hub">
+            </div>
+            <div class="form-group">
+                <label>Contact Person</label>
+                <input type="text" id="whPerson" class="input-field" placeholder="Name of Manager">
+            </div>
+            <div class="form-group">
+                <label>Contact Details</label>
+                <input type="text" id="whContact" class="input-field" placeholder="Phone or Email">
+            </div>
+            <div class="form-group">
+                <label>Zip Code</label>
+                <input type="text" id="whZip" class="input-field" placeholder="e.g. 33101">
+            </div>
+            <div class="form-group">
+                <label>Others (Address/Notes)</label>
+                <textarea id="whOthers" class="input-field" rows="3"></textarea>
+            </div>
+
+            <button class="btn-save" id="saveWHBtn">Save Warehouse</button>
+            <button class="btn-cancel" onclick="closeWHModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTxU9U4OW_xaEV3WZnSrpdM9Lal8TBN5c",
+            authDomain: "my-inventory-app-4c806.firebaseapp.com",
+            projectId: "my-inventory-app-4c806",
+            storageBucket: "my-inventory-app-4c806.firebasestorage.app",
+            messagingSenderId: "258251635272",
+            appId: "1:258251635272:web:597ea77880c4ff3ef3767d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Modal Control Functions
+        window.openWHModal = () => document.getElementById('whModal').style.display = 'block';
+        window.closeWHModal = () => document.getElementById('whModal').style.display = 'none';
+
+        // Save Data
+        document.getElementById('saveWHBtn').addEventListener('click', async () => {
+            const data = {
+                name: document.getElementById('whName').value.trim(),
+                person: document.getElementById('whPerson').value.trim(),
+                contact: document.getElementById('whContact').value.trim(),
+                zip: document.getElementById('whZip').value.trim(),
+                others: document.getElementById('whOthers').value.trim(),
+                ts: serverTimestamp()
+            };
+
+            if (!data.name) return alert("Warehouse Name is required!");
+
+            try {
+                await addDoc(collection(db, 'warehouses'), data);
+                alert("Warehouse Added!");
+                closeWHModal();
+                // Clear inputs
+                ['whName', 'whPerson', 'whContact', 'whZip', 'whOthers'].forEach(id => document.getElementById(id).value = '');
+            } catch (e) { alert("Error: " + e.message); }
+        });
+
+        // Real-time Table
+        onSnapshot(collection(db, 'warehouses'), (snap) => {
+            let rows = '';
+            snap.forEach(d => {
+                const w = d.data();
+                rows += `
+                <tr>
+                    <td><strong>${w.name}</strong></td>
+                    <td>${w.person || '-'}</td>
+                    <td>${w.zip || '-'}</td>
+                    <td title="${w.others}">${w.contact || '-'}</td>
+                    <td style="text-align: right;">
+                        <button class="btn-remove" onclick="deleteWH('${d.id}')">Remove</button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('whDisplayTable').innerHTML = rows || '<tr><td colspan="5" style="text-align:center;">No warehouses found.</td></tr>';
+        });
+
+        window.deleteWH = async (id) => {
+            if (confirm("Delete warehouse?")) await deleteDoc(doc(db, 'warehouses', id));
+        };
+    </script>
+</body>
+
+</html>
