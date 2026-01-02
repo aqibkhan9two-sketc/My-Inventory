@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Client Management - MyStock</title>
+
+    <style>
+        :root {
+            --primary: #1e1e2d;
+            --success: #2ecc71;
+            --bg: #f4f7fa;
+            --sidebar: #1e1e2d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: #2d3436;
+            display: flex;
+            /* Sidebar ko side par rakhne ke liye */
+        }
+
+        /* Sidebar Theme - New */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: var(--primary);
+            color: #a2a3b7;
+            padding: 25px;
+            position: fixed;
+            z-index: 1000;
+            transition: 0.3s;
+        }
+
+        .sidebar h2 {
+            color: white;
+            font-weight: 800;
+            margin-bottom: 40px;
+            font-size: 22px;
+        }
+
+        .sidebar h2 span {
+            color: var(--success);
+        }
+
+        .sidebar a {
+            display: block;
+            color: #a2a3b7;
+            text-decoration: none;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: rgba(67, 97, 238, 0.15);
+            color: white;
+        }
+
+        .main-content {
+            margin-left: 240px;
+            padding: 30px;
+            width: calc(100% - 240px);
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Form Styling with Labels */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 30px;
+            width: 60%;
+            border-radius: 12px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        input,
+        textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-add {
+            background: #27ae60;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Table Styling for all 8 fields */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 1000px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-size: 11px;
+        }
+
+        .edit-btn {
+            background: #f39c12;
+            margin-right: 5px;
+        }
+
+        .del-btn {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>Rubell<span>Walmart</span></h2>
+        <a href="index.html">📊 Dashboard</a>
+        <a href="stock.html">📈 Live Stock</a>
+        <a href="orders.html">🛒 Orders</a>
+        <a href="purchases.html">💰 Purchases</a>
+        <a href="products.html">📦 Products</a>
+        <a href="clients.html" class="active">👥 Clients</a>
+        <a href="warehouse.html">🏠 Warehouses</a>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <h1>Client Management</h1>
+            <div style="display:flex; justify-content: space-between; margin-bottom: 20px;">
+                <input type="text" id="clientSearch" placeholder="Search Clients..." style="width:60%; padding:10px;"
+                    onkeyup="filterClients()">
+                <button class="btn-add" onclick="openClientModal()">+ Add New Client</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Account Name</th>
+                            <th>Contact Person</th>
+                            <th>Contact No.</th>
+                            <th>Email Address</th>
+                            <th>Country</th>
+                            <th>City</th>
+                            <th>Bank Details</th>
+                            <th>Other Details</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="clientModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Register New Client</h2>
+            <div class="form-grid">
+                <div class="input-group"><label>Account Name</label><input type="text" id="accName"></div>
+                <div class="input-group"><label>Contact Person</label><input type="text" id="conPerson"></div>
+                <div class="input-group"><label>Contact No.</label><input type="text" id="conNo"></div>
+                <div class="input-group"><label>Email Address</label><input type="email" id="email"></div>
+                <div class="input-group"><label>Country</label><input type="text" id="country"></div>
+                <div class="input-group"><label>City</label><input type="text" id="city"></div>
+                <div class="input-group full-width"><label>Bank Details</label><textarea id="bankDetails"
+                        rows="3"></textarea></div>
+                <div class="input-group full-width"><label>Other Details</label><textarea id="otherDetails"
+                        rows="2"></textarea></div>
+            </div>
+            <div style="margin-top: 25px; text-align: right;">
+                <button onclick="closeClientModal()"
+                    style="background:#bdc3c7; padding:12px; border:none; border-radius:6px; cursor:pointer;">Close
+                    Form</button>
+                <button id="saveClientBtn" class="btn-add">Save Client</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTxU9U4OW_xaEV3WZnSrpdM9Lal8TBN5c",
+            authDomain: "my-inventory-app-4c806.firebaseapp.com",
+            projectId: "my-inventory-app-4c806",
+            storageBucket: "my-inventory-app-4c806.firebasestorage.app",
+            messagingSenderId: "258251635272",
+            appId: "1:258251635272:web:597ea77880c4ff3ef3767d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const clientCol = collection(db, 'clients');
+        let currentEditId = null;
+
+        window.openClientModal = () => {
+            currentEditId = null;
+            document.getElementById('modalTitle').innerText = "Register New Client";
+            document.getElementById('saveClientBtn').innerText = "Save Client";
+            resetForm();
+            document.getElementById('clientModal').style.display = 'block';
+        };
+        window.closeClientModal = () => document.getElementById('clientModal').style.display = 'none';
+
+        const resetForm = () => {
+            document.querySelectorAll('input, textarea').forEach(i => i.value = '');
+        };
+
+        document.getElementById('saveClientBtn').addEventListener('click', async () => {
+            const data = {
+                accountName: document.getElementById('accName').value,
+                contactPerson: document.getElementById('conPerson').value,
+                contactNo: document.getElementById('conNo').value,
+                email: document.getElementById('email').value,
+                country: document.getElementById('country').value,
+                city: document.getElementById('city').value,
+                bank: document.getElementById('bankDetails').value,
+                others: document.getElementById('otherDetails').value
+            };
+
+            if (currentEditId) {
+                await updateDoc(doc(db, 'clients', currentEditId), data);
+                alert("Client Updated!");
+            } else {
+                await addDoc(clientCol, data);
+                alert("Client Saved!");
+                resetForm(); // Form stays open
+            }
+        });
+
+        onSnapshot(clientCol, (snap) => {
+            const table = document.getElementById('clientTableBody');
+            table.innerHTML = '';
+            snap.docs.forEach(docSnap => {
+                const c = docSnap.data();
+                const id = docSnap.id;
+                table.innerHTML += `<tr>
+                <td><strong>${c.accountName}</strong></td>
+                <td>${c.contactPerson}</td>
+                <td>${c.contactNo}</td>
+                <td>${c.email}</td>
+                <td>${c.country}</td>
+                <td>${c.city}</td>
+                <td>${c.bank}</td>
+                <td>${c.others}</td>
+                <td>
+                    <button class="action-btn edit-btn" onclick="editClient('${id}')">Edit</button>
+                    <button class="action-btn del-btn" onclick="deleteClient('${id}')">Del</button>
+                </td>
+            </tr>`;
+            });
+        });
+
+        window.editClient = async (id) => {
+            const docSnap = await getDoc(doc(db, 'clients', id));
+            if (docSnap.exists()) {
+                const c = docSnap.data();
+                currentEditId = id;
+                document.getElementById('accName').value = c.accountName;
+                document.getElementById('conPerson').value = c.contactPerson;
+                document.getElementById('conNo').value = c.contactNo;
+                document.getElementById('email').value = c.email;
+                document.getElementById('country').value = c.country;
+                document.getElementById('city').value = c.city;
+                document.getElementById('bankDetails').value = c.bank;
+                document.getElementById('otherDetails').value = c.others;
+
+                document.getElementById('modalTitle').innerText = "Edit Client";
+                document.getElementById('saveClientBtn').innerText = "Update Client";
+                document.getElementById('clientModal').style.display = 'block';
+            }
+        };
+
+        window.deleteClient = async (id) => {
+            if (confirm("Delete this client?")) await deleteDoc(doc(db, 'clients', id));
+        };
+
+        window.filterClients = () => {
+            const val = document.getElementById('clientSearch').value.toLowerCase();
+            const rows = document.querySelectorAll('#clientTableBody tr');
+            rows.forEach(r => r.style.display = r.innerText.toLowerCase().includes(val) ? '' : 'none');
+        };
+    </script>
+</body>
+
+</html>

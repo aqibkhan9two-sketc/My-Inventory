@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Product Registration - MyStock</title>
+    <style>
+        :root {
+            --primary: #1e1e2d;
+            --success: #2ecc71;
+            --bg: #f4f7fa;
+            --sidebar: #1e1e2d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: #2d3436;
+            display: flex;
+            /* Sidebar ko side par rakhne ke liye */
+        }
+
+        /* Sidebar Theme - New */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: var(--primary);
+            color: #a2a3b7;
+            padding: 25px;
+            position: fixed;
+            z-index: 1000;
+            transition: 0.3s;
+        }
+
+        .sidebar h2 {
+            color: white;
+            font-weight: 800;
+            margin-bottom: 40px;
+            font-size: 22px;
+        }
+
+        .sidebar h2 span {
+            color: var(--success);
+        }
+
+        .sidebar a {
+            display: block;
+            color: #a2a3b7;
+            text-decoration: none;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: rgba(67, 97, 238, 0.15);
+            color: white;
+        }
+
+        .main-content {
+            margin-left: 240px;
+            padding: 30px;
+            width: calc(100% - 240px);
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Modal & Form Settled Design */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 1% auto;
+            padding: 30px;
+            width: 80%;
+            border-radius: 12px;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        input,
+        select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input:disabled {
+            background: #f9f9f9;
+            color: #666;
+        }
+
+        /* Updated Button Color to Blue as per Order Page */
+        .btn-add {
+            background: #2563EB;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Wide Table for all fields */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 1500px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        .action-btn {
+            padding: 5px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            font-size: 11px;
+        }
+
+        .edit-btn {
+            background: #f39c12;
+            margin-right: 4px;
+        }
+
+        .del-btn {
+            background: #e74c3c;
+        }
+
+        /* Filter Section Styling */
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-item label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #666;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>Rubell<span>Walmart</span></h2>
+        <a href="index.html">📊 Dashboard</a>
+        <a href="stock.html">📈 Live Stock</a>
+        <a href="orders.html">🛒 Orders</a>
+        <a href="purchases.html">💰 Purchases</a>
+        <a href="products.html" class="active">📦 Products</a>
+        <a href="clients.html">👥 Clients</a>
+        <a href="warehouse.html">🏠 Warehouses</a>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <h1>Product Registration</h1>
+
+            <div class="filter-section">
+                <div class="filter-item" style="flex: 1;">
+                    <label>Filter by Client</label>
+                    <select id="pClientFilter" onchange="searchTable()">
+                        <option value="">All Clients</option>
+                    </select>
+                </div>
+                <div class="filter-item" style="flex: 2;">
+                    <label>Search Product</label>
+                    <input type="text" id="pSearch" placeholder="Search by SKU or Name..." onkeyup="searchTable()">
+                </div>
+                <button class="btn-add" onclick="openPModal()">+ Register New Product</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Client</th>
+                            <th>Product Name</th>
+                            <th>Link</th>
+                            <th>Item ID</th>
+                            <th>Unit Cost</th>
+                            <th>Label</th>
+                            <th>3PL</th>
+                            <th>Shipping</th>
+                            <th>Total Cost</th>
+                            <th>Sell Price</th>
+                            <th>Fee 15%</th>
+                            <th>Profit</th>
+                            <th>ROI %</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="pModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Register New Product</h2>
+            <div class="form-grid">
+                <div class="input-group"><label>Account Name (Client)</label><select id="pClient"
+                        onchange="updateSKUPrefix()"></select></div>
+                <div class="input-group">
+                    <label>SKU (Prefix + ID)</label>
+                    <div style="display: flex; gap: 2px;">
+                        <input type="text" id="skuPre" disabled style="width: 70px;">
+                        <input type="text" id="skuNum" placeholder="Numeric ID">
+                    </div>
+                </div>
+                <div class="input-group"><label>Product Name</label><input type="text" id="pName"></div>
+                <div class="input-group"><label>Product Link</label><input type="text" id="pLink"></div>
+                <div class="input-group"><label>Item ID</label><input type="text" id="pItemId"></div>
+                <div class="input-group"><label>Unit Cost</label><input type="number" id="pUnitCost" oninput="doMath()">
+                </div>
+                <div class="input-group"><label>Label Cost</label><input type="number" id="pLabel" oninput="doMath()">
+                </div>
+                <div class="input-group"><label>3PL Cost</label><input type="number" id="p3PL" oninput="doMath()"></div>
+                <div class="input-group"><label>Shipping</label><input type="number" id="pShipping" oninput="doMath()">
+                </div>
+                <div class="input-group"><label>Selling Price</label><input type="number" id="pSell" oninput="doMath()">
+                </div>
+                <div class="input-group"><label>Total Cost (Auto)</label><input type="text" id="pTotalCost" disabled>
+                </div>
+                <div class="input-group"><label>Fee 15% (Auto)</label><input type="text" id="pFee" disabled></div>
+                <div class="input-group"><label>Profit (Auto)</label><input type="text" id="pProfit" disabled></div>
+                <div class="input-group"><label>ROI % (Auto)</label><input type="text" id="pROI" disabled></div>
+                <div class="input-group"><label>Status</label>
+                    <select id="pStatus">
+                        <option value="Active">Active</option>
+                        <option value="Out of Stock">Out of Stock</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-top: 25px; text-align: right;">
+                <button onclick="closePModal()"
+                    style="background:#bdc3c7; padding:12px; border:none; border-radius:6px; cursor:pointer;">Close
+                    Form</button>
+                <button id="savePBtn" class="btn-add">Save Product</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTxU9U4OW_xaEV3WZnSrpdM9Lal8TBN5c",
+            authDomain: "my-inventory-app-4c806.firebaseapp.com",
+            projectId: "my-inventory-app-4c806",
+            storageBucket: "my-inventory-app-4c806.firebasestorage.app",
+            messagingSenderId: "258251635272",
+            appId: "1:258251635272:web:597ea77880c4ff3ef3767d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const prodCol = collection(db, 'products');
+        const clientCol = collection(db, 'clients');
+        let editId = null;
+
+        // Load Clients into both Form and Filter Dropdown
+        onSnapshot(clientCol, (snap) => {
+            let options = '<option value="">Select Client</option>';
+            let filterOptions = '<option value="">All Clients</option>';
+            snap.docs.forEach(d => {
+                const name = d.data().accountName;
+                options += `<option value="${name}">${name}</option>`;
+                filterOptions += `<option value="${name}">${name}</option>`;
+            });
+            document.getElementById('pClient').innerHTML = options;
+            document.getElementById('pClientFilter').innerHTML = filterOptions;
+        });
+
+        window.updateSKUPrefix = () => {
+            let client = document.getElementById('pClient').value;
+            document.getElementById('skuPre').value = client ? client.substring(0, 2).toUpperCase() + "-" : "";
+        };
+
+        window.doMath = () => {
+            let uc = +document.getElementById('pUnitCost').value || 0;
+            let lc = +document.getElementById('pLabel').value || 0;
+            let tpl = +document.getElementById('p3PL').value || 0;
+            let sc = +document.getElementById('pShipping').value || 0;
+            let sp = +document.getElementById('pSell').value || 0;
+
+            let total = uc + lc + tpl + sc;
+            let fee = sp * 0.15;
+            let profit = sp - total - fee;
+            let roi = total > 0 ? (profit / total) * 100 : 0;
+
+            document.getElementById('pTotalCost').value = total.toFixed(2);
+            document.getElementById('pFee').value = fee.toFixed(2);
+            document.getElementById('pProfit').value = profit.toFixed(2);
+            document.getElementById('pROI').value = roi.toFixed(2) + "%";
+        };
+
+        window.openPModal = () => {
+            editId = null; resetForm();
+            document.getElementById('modalTitle').innerText = "Register New Product";
+            document.getElementById('savePBtn').innerText = "Save Product";
+            document.getElementById('pModal').style.display = 'block';
+        };
+        window.closePModal = () => document.getElementById('pModal').style.display = 'none';
+
+        const resetForm = () => {
+            document.querySelectorAll('input').forEach(i => { if (!i.disabled) i.value = '' });
+            document.getElementById('skuPre').value = '';
+        };
+
+        document.getElementById('savePBtn').addEventListener('click', async () => {
+            const data = {
+                sku: document.getElementById('skuPre').value + document.getElementById('skuNum').value,
+                client: document.getElementById('pClient').value,
+                name: document.getElementById('pName').value,
+                link: document.getElementById('pLink').value,
+                itemId: document.getElementById('pItemId').value,
+                unitCost: document.getElementById('pUnitCost').value,
+                labelCost: document.getElementById('pLabel').value,
+                plCost: document.getElementById('p3PL').value,
+                shipCost: document.getElementById('pShipping').value,
+                totalCost: document.getElementById('pTotalCost').value,
+                sellPrice: document.getElementById('pSell').value,
+                fee: document.getElementById('pFee').value,
+                profit: document.getElementById('pProfit').value,
+                roi: document.getElementById('pROI').value,
+                status: document.getElementById('pStatus').value
+            };
+
+            if (editId) {
+                await updateDoc(doc(db, 'products', editId), data);
+                alert("Product Updated!");
+            } else {
+                await addDoc(prodCol, data);
+                alert("Product Saved!");
+                resetForm();
+            }
+        });
+
+        onSnapshot(prodCol, (snap) => {
+            let html = '';
+            snap.docs.forEach(d => {
+                const p = d.data();
+                html += `<tr>
+                <td><strong>${p.sku}</strong></td>
+                <td>${p.client}</td>
+                <td>${p.name}</td>
+                <td><a href="${p.link}" target="_blank">Link</a></td>
+                <td>${p.itemId}</td>
+                <td>${p.unitCost}</td>
+                <td>${p.labelCost}</td>
+                <td>${p.plCost}</td>
+                <td>${p.shipCost}</td>
+                <td>${p.totalCost}</td>
+                <td>${p.sellPrice}</td>
+                <td>${p.fee}</td>
+                <td style="color:${p.profit > 0 ? 'green' : 'red'}"><strong>${p.profit}</strong></td>
+                <td>${p.roi}</td>
+                <td>${p.status}</td>
+                <td>
+                    <button class="action-btn edit-btn" onclick="editProd('${d.id}')">Edit</button>
+                    <button class="action-btn del-btn" onclick="delProd('${d.id}')">Del</button>
+                </td>
+            </tr>`;
+            });
+            document.getElementById('pTableBody').innerHTML = html;
+            searchTable(); // To keep filters active on data change
+        });
+
+        window.editProd = async (id) => {
+            const docSnap = await getDoc(doc(db, 'products', id));
+            if (docSnap.exists()) {
+                const p = docSnap.data(); editId = id;
+                document.getElementById('pClient').value = p.client;
+                updateSKUPrefix();
+                document.getElementById('skuNum').value = p.sku.split('-')[1] || '';
+                document.getElementById('pName').value = p.name;
+                document.getElementById('pLink').value = p.link;
+                document.getElementById('pItemId').value = p.itemId;
+                document.getElementById('pUnitCost').value = p.unitCost;
+                document.getElementById('pLabel').value = p.labelCost;
+                document.getElementById('p3PL').value = p.plCost;
+                document.getElementById('pShipping').value = p.shipCost;
+                document.getElementById('pSell').value = p.sellPrice;
+                doMath();
+                document.getElementById('modalTitle').innerText = "Edit Product";
+                document.getElementById('savePBtn').innerText = "Update Product";
+                document.getElementById('pModal').style.display = 'block';
+            }
+        };
+
+        window.delProd = async (id) => {
+            if (confirm("Delete product?")) await deleteDoc(doc(db, 'products', id));
+        };
+
+        // Updated Search Function with Client Filter support
+        window.searchTable = () => {
+            let textFilter = document.getElementById('pSearch').value.toUpperCase();
+            let clientFilter = document.getElementById('pClientFilter').value.toUpperCase();
+            let rows = document.querySelectorAll('#pTableBody tr');
+
+            rows.forEach(r => {
+                let rowText = r.innerText.toUpperCase();
+                // Checking if row contains search text AND contains selected client
+                let matchesText = rowText.includes(textFilter);
+                let matchesClient = clientFilter === "" || rowText.includes(clientFilter);
+
+                r.style.display = (matchesText && matchesClient) ? "" : "none";
+            });
+        };
+    </script>
+</body>
+
+</html>

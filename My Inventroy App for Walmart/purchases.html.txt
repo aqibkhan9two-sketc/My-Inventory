@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchases - MyStock Elite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #4361ee;
+            --success: #2ecc71;
+            --bg: #f4f7fa;
+            --sidebar: #1e1e2d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: #2d3436;
+            display: flex;
+            /* Sidebar ko side par rakhne ke liye */
+        }
+
+        /* Sidebar Theme - New */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: var(--sidebar);
+            color: #a2a3b7;
+            padding: 25px;
+            position: fixed;
+            z-index: 1000;
+            transition: 0.3s;
+        }
+
+        .sidebar h2 {
+            color: white;
+            font-weight: 800;
+            margin-bottom: 40px;
+            font-size: 22px;
+        }
+
+        .sidebar h2 span {
+            color: var(--success);
+        }
+
+        .sidebar a {
+            display: block;
+            color: #a2a3b7;
+            text-decoration: none;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            transition: 0.2s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: rgba(67, 97, 238, 0.15);
+            color: white;
+        }
+
+        /* Main Content Area */
+        main {
+            margin-left: 260px;
+            padding: 30px;
+            width: calc(100% - 260px);
+            min-height: 100vh;
+        }
+
+        /* Table & Components Fix */
+        .master-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .master-table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 11px;
+            text-transform: uppercase;
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .master-table tbody td {
+            padding: 15px;
+            font-size: 14px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            height: 42px;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .btn-edit {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .btn-del {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+
+        /* Mobile Logic */
+        @media (max-width: 600px) {
+            body {
+                display: block;
+            }
+
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                display: flex;
+                overflow-x: auto;
+                padding: 10px;
+            }
+
+            .sidebar h2 {
+                display: none;
+            }
+
+            .sidebar a {
+                white-space: nowrap;
+                margin-bottom: 0;
+                padding: 10px;
+            }
+
+            main {
+                margin-left: 0;
+                width: 100%;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>Rubell<span>Walmart</span></h2>
+        <a href="index.html">📊 Dashboard</a>
+        <a href="stock.html">📈 Live Stock</a>
+        <a href="orders.html">🛒 Orders</a>
+        <a href="purchases.html" class="active">💰 Purchases</a>
+        <a href="products.html">📦 Products</a>
+        <a href="clients.html">👥 Clients</a>
+        <a href="warehouse.html">🏠 Warehouses</a>
+    </div>
+
+    <main>
+        <div class="max-w-[1600px] mx-auto">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Purchases Ledger</h1>
+                    <p class="text-slate-500 text-sm">Manage acquisitions and landed costs</p>
+                </div>
+                <button onclick="openPurModal()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-bold text-xs uppercase tracking-widest shadow-lg transition">+
+                    New Entry</button>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6 flex gap-3 items-center">
+                <div class="relative flex-grow">
+                    <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+                    <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search SKU or Order ID..."
+                        class="form-control pl-10 bg-slate-50 border-transparent focus:bg-white w-full rounded-lg text-sm">
+                </div>
+
+                <div class="w-44">
+                    <select id="accountFilter" onchange="filterTable()"
+                        class="form-control bg-slate-50 border-transparent focus:bg-white font-medium text-sm rounded-lg w-full">
+                        <option value="">All Accounts</option>
+                    </select>
+                </div>
+
+                <div class="w-40">
+                    <select id="statusFilter" onchange="filterTable()"
+                        class="form-control bg-slate-50 border-transparent focus:bg-white font-medium text-sm rounded-lg w-full">
+                        <option value="">All Statuses</option>
+                        <option value="Ordered">Ordered</option>
+                        <option value="Delivered">Delivered</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                    <input type="date" id="fromDate" onchange="filterTable()"
+                        class="bg-transparent border-none text-xs font-semibold text-slate-600 focus:ring-0 outline-none p-0">
+                    <span class="text-slate-400 text-xs font-bold">to</span>
+                    <input type="date" id="toDate" onchange="filterTable()"
+                        class="bg-transparent border-none text-xs font-semibold text-slate-600 focus:ring-0 outline-none p-0">
+                </div>
+
+                <button onclick="exportFilteredData()"
+                    class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm flex items-center gap-2 shrink-0">
+                    📥 <span>Export</span>
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="master-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Account</th>
+                                <th>Order #</th>
+                                <th>Product Details</th>
+                                <th>Link</th>
+                                <th>Qty</th>
+                                <th>Total</th>
+                                <th>Landed</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="purTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="purModal"
+        class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-[1250px] rounded-2xl shadow-2xl flex flex-col max-h-[92vh]">
+            <div class="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                <h2 id="mTitle" class="text-xl font-bold text-slate-800">Purchase Entry</h2>
+                <button onclick="closePurModal()" class="text-3xl text-slate-400 hover:text-slate-600">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <div class="grid grid-cols-4 gap-4 mb-6 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                    <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Date</label><input
+                            type="date" id="mDate" class="form-control mt-1"></div>
+                    <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Account</label><select
+                            id="mAcc" class="form-control mt-1"></select></div>
+                    <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Platform</label><input
+                            type="text" id="mPlat" placeholder="e.g. Amazon" class="form-control mt-1"></div>
+                    <div><label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Order ID</label><input
+                            type="text" id="mOrder" placeholder="#12345" class="form-control mt-1"></div>
+                    <div class="col-span-1"><input type="text" id="mCard" placeholder="Card (Last 4)"
+                            class="form-control"></div>
+                    <div class="col-span-1"><input type="text" id="mCarrier" placeholder="Carrier" class="form-control">
+                    </div>
+                    <div class="col-span-2"><select id="mWH" class="form-control"></select></div>
+                </div>
+
+                <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-800 text-white text-[10px] uppercase tracking-wider">
+                            <tr>
+                                <th class="p-4 text-left w-64">SKU / Product Name</th>
+                                <th class="p-4 text-center w-24">Qty</th>
+                                <th class="p-4 text-center w-28">Unit $</th>
+                                <th class="p-4 text-center w-24">Tax</th>
+                                <th class="p-4 text-center w-24">Fee</th>
+                                <th class="p-4 text-center w-32">Total</th>
+                                <th class="p-4 text-center w-28">Landed</th>
+                                <th class="p-4 text-center w-36">Status</th>
+                                <th class="p-4 w-12"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="productRowsContainer"></tbody>
+                    </table>
+                    <button onclick="addNewRow()"
+                        class="w-full p-4 text-blue-600 font-bold text-xs uppercase hover:bg-blue-50 border-t transition text-left">+
+                        Add Another Item</button>
+                </div>
+            </div>
+            <div class="p-6 border-t flex justify-end gap-3 bg-slate-50 rounded-b-2xl">
+                <button onclick="closePurModal()"
+                    class="px-6 py-2 text-slate-400 font-bold text-xs uppercase">Cancel</button>
+                <button onclick="saveBulkPurchase()"
+                    class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold text-xs uppercase shadow-md hover:bg-blue-700 transition">Save
+                    Purchase</button>
+            </div>
+        </div>
+    </div>
+
+    <datalist id="skuData"></datalist>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTxU9U4OW_xaEV3WZnSrpdM9Lal8TBN5c",
+            authDomain: "my-inventory-app-4c806.firebaseapp.com",
+            projectId: "my-inventory-app-4c806",
+            storageBucket: "my-inventory-app-4c806.firebasestorage.app",
+            messagingSenderId: "258251635272",
+            appId: "1:258251635272:web:597ea77880c4ff3ef3767d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        let masterProducts = [];
+        let editId = null;
+
+        // --- GLOBAL FUNCTIONS FOR TABLE ---
+        window.updateQuickStatus = async (id, newStatus) => {
+            try {
+                await updateDoc(doc(db, 'purchases', id), { status: newStatus });
+            } catch (e) { alert("Update failed!"); }
+        };
+
+        window.deletePur = async (id) => {
+            if (confirm("Delete this purchase?")) await deleteDoc(doc(db, 'purchases', id));
+        };
+
+        window.editPur = async (id) => {
+            const d = await getDoc(doc(db, 'purchases', id));
+            if (d.exists()) {
+                const p = d.data(); editId = id;
+                document.getElementById('mTitle').innerText = "Edit Purchase Entry";
+                document.getElementById('mDate').value = p.date || '';
+                document.getElementById('mAcc').value = p.account || '';
+                document.getElementById('mPlat').value = p.platform || '';
+                document.getElementById('mOrder').value = p.orderNum || '';
+                document.getElementById('mCard').value = p.card || '';
+                document.getElementById('mCarrier').value = p.carrier || '';
+                document.getElementById('mWH').value = p.warehouse || '';
+                document.getElementById('productRowsContainer').innerHTML = '';
+                window.addNewRow(p);
+                document.getElementById('purModal').classList.remove('hidden');
+            }
+        };
+
+        window.filterTable = () => {
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const accountVal = document.getElementById('accountFilter').value;
+            const statusVal = document.getElementById('statusFilter').value;
+
+            // Nayi Date Variables
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+
+            const rows = document.querySelectorAll('#purTableBody tr');
+
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                const account = row.cells[1].innerText;
+                const status = row.querySelector('select')?.value || "";
+
+                // 1. Date Logic (Pehla cell index 0 hota hai)
+                const rowDateValue = row.cells[0].innerText.trim();
+                const rowDate = rowDateValue ? new Date(rowDateValue) : null;
+
+                let matchesDate = true;
+                if (fromDate && rowDate && rowDate < new Date(fromDate)) matchesDate = false;
+                if (toDate && rowDate && rowDate > new Date(toDate)) matchesDate = false;
+
+                // 2. Baqi Logic
+                const matchesSearch = text.includes(searchVal);
+                const matchesAccount = accountVal === "" || account === accountVal;
+                const matchesStatus = statusVal === "" || status === statusVal;
+
+                // Sab conditions ka match hona zaroori hai
+                row.style.display = (matchesSearch && matchesAccount && matchesStatus && matchesDate) ? "" : "none";
+            });
+        };
+
+        window.exportFilteredData = () => {
+            let csv = [];
+            // Table ki saari rows (header samet) uthayein
+            const rows = document.querySelectorAll("table tr");
+
+            for (let i = 0; i < rows.length; i++) {
+                // Sirf wahi row uthao jo 'none' nahi hai (yani jo filter ho chuki hain)
+                if (rows[i].style.display !== 'none') {
+                    const row = [];
+                    // Saare cells uthayein
+                    const cols = rows[i].querySelectorAll("td, th");
+
+                    // "Action" column (edit/delete) ko chorr kar baqi data uthayein
+                    for (let j = 0; j < cols.length - 1; j++) {
+                        // Agar cell ke andar select box hai (jaise Status), toh uski value uthayein
+                        let data;
+                        const select = cols[j].querySelector('select');
+                        if (select) {
+                            data = select.value;
+                        } else {
+                            data = cols[j].innerText.trim();
+                        }
+
+                        // Data mein comma ya new line handle karein taake CSV kharab na ho
+                        data = data.replace(/(\r\n|\n|\r)/gm, "").replace(/,/g, ";");
+                        row.push('"' + data + '"');
+                    }
+                    csv.push(row.join(","));
+                }
+            }
+
+            // CSV File banane aur download karne ka process
+            const csvString = csv.join("\n");
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+
+            // File ka naam Date ke sath (taake report pehchani ja sake)
+            const fileName = `Report_${new Date().toLocaleDateString()}.csv`;
+
+            if (navigator.msSaveBlob) { // IE ke liye
+                navigator.msSaveBlob(blob, fileName);
+            } else {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", fileName);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
+
+        // --- DATA SYNC ---
+        onSnapshot(query(collection(db, 'purchases'), orderBy('ts', 'desc')), s => {
+            let h = '';
+            s.docs.forEach(d => {
+                const p = d.data();
+                const sColor = p.status === 'Delivered' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700';
+                h += `<tr>
+                    <td class="text-slate-400 font-medium">${p.date || '-'}</td>
+                    <td class="font-bold text-slate-700">${p.account || '-'}</td>
+                    <td class="font-mono text-blue-600 font-bold">#${p.orderNum || '-'}</td>
+                    <td><div class="font-bold">${p.sku}</div><div class="text-[10px] text-slate-400">${p.pName || ''}</div></td>
+                    <td>${p.link && p.link !== '-' ? `<a href="${p.link}" target="_blank" class="text-blue-500 hover:underline">🔗 View</a>` : '-'}</td>
+                    <td class="font-bold text-center">${p.qty}</td>
+                    <td class="font-bold">$${p.totalAmount}</td>
+                    <td class="font-bold text-emerald-600">$${p.perUnit}</td>
+                    <td>
+                        <select onchange="updateQuickStatus('${d.id}', this.value)" 
+                            class="px-2 py-1 rounded text-[10px] font-bold uppercase cursor-pointer outline-none ${sColor}">
+                            <option value="Ordered" ${p.status === 'Ordered' ? 'selected' : ''}>Ordered</option>
+                            <option value="Delivered" ${p.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div class="flex gap-2 justify-center">
+                            <button onclick="editPur('${d.id}')" class="btn-icon btn-edit">✏️</button>
+                            <button onclick="deletePur('${d.id}')" class="btn-icon btn-del">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('purTableBody').innerHTML = h;
+            filterTable();
+        });
+
+        // --- MODAL FUNCTIONS ---
+        window.addNewRow = (data = null) => {
+            const id = Date.now() + Math.random();
+            const html = `
+                <tr id="row-${id}" class="border-b border-slate-50">
+                    <td class="p-4 flex flex-col">
+                        <input type="text" class="r-sku form-control font-bold mb-1" list="skuData" oninput="autoFill('${id}', this.value)" value="${data?.sku || ''}" placeholder="SKU">
+                        <input type="text" class="r-name text-[10px] text-slate-400 border-none p-0 bg-transparent h-auto ml-1" value="${data?.pName || 'Product Name'}" disabled>
+                        <input type="hidden" class="r-link" value="${data?.link || '-'}">
+                    </td>
+                    <td class="p-4"><input type="number" class="r-qty form-control text-center font-bold" oninput="calc('${id}')" value="${data?.qty || ''}"></td>
+                    <td class="p-4"><input type="number" class="r-unit form-control text-center" oninput="calc('${id}')" value="${data?.unit || ''}"></td>
+                    <td class="p-4"><input type="number" class="r-tax form-control text-center" oninput="calc('${id}')" value="${data?.tax || 0}"></td>
+                    <td class="p-4"><input type="number" class="r-fee form-control text-center" oninput="calc('${id}')" value="${data?.fee || 0}"></td>
+                    <td class="p-4"><input type="text" class="r-total form-control bg-slate-50 text-center" value="${data?.totalAmount || '0.00'}" disabled></td>
+                    <td class="p-4"><input type="text" class="r-per form-control bg-slate-50 text-center font-bold text-blue-600" value="${data?.perUnit || '0.00'}" disabled></td>
+                    <td class="p-4">
+                        <select class="r-status form-control">
+                            <option value="Ordered" ${data?.status === 'Ordered' ? 'selected' : ''}>Ordered</option>
+                            <option value="Delivered" ${data?.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                        </select>
+                    </td>
+                    <td class="p-4 text-center"><button onclick="this.parentElement.parentElement.remove()" class="text-red-300 hover:text-red-500">🗑️</button></td>
+                </tr>`;
+            document.getElementById('productRowsContainer').insertAdjacentHTML('beforeend', html);
+        };
+
+        window.openPurModal = () => { editId = null; document.getElementById('mTitle').innerText = "New Purchase"; document.getElementById('productRowsContainer').innerHTML = ''; document.getElementById('purModal').classList.remove('hidden'); addNewRow(); };
+        window.closePurModal = () => document.getElementById('purModal').classList.add('hidden');
+        window.autoFill = (rid, val) => { const p = masterProducts.find(x => x.sku === val.trim()); const row = document.getElementById(`row-${rid}`); if (p && row) { row.querySelector('.r-name').value = p.name; row.querySelector('.r-link').value = p.link || '-'; } };
+        window.calc = (rid) => { const row = document.getElementById(`row-${rid}`); const q = +row.querySelector('.r-qty').value || 0, u = +row.querySelector('.r-unit').value || 0, t = +row.querySelector('.r-tax').value || 0, f = +row.querySelector('.r-fee').value || 0; const totalAmt = (u * q) + t + f; row.querySelector('.r-total').value = totalAmt.toFixed(2); row.querySelector('.r-per').value = q > 0 ? (totalAmt / q).toFixed(2) : "0.00"; };
+
+        window.saveBulkPurchase = async () => {
+            const rows = document.querySelectorAll('#productRowsContainer tr');
+            const head = {
+                date: document.getElementById('mDate').value, account: document.getElementById('mAcc').value,
+                platform: document.getElementById('mPlat').value, orderNum: document.getElementById('mOrder').value,
+                card: document.getElementById('mCard').value, carrier: document.getElementById('mCarrier').value,
+                warehouse: document.getElementById('mWH').value, ts: new Date()
+            };
+            if (!head.account || !head.orderNum) { alert("Account & Order Num required"); return; }
+            try {
+                for (let r of rows) {
+                    const skuVal = r.querySelector('.r-sku').value; if (!skuVal) continue;
+                    const data = { ...head, sku: skuVal, pName: r.querySelector('.r-name').value, link: r.querySelector('.r-link').value, qty: Number(r.querySelector('.r-qty').value) || 0, unit: Number(r.querySelector('.r-unit').value) || 0, tax: Number(r.querySelector('.r-tax').value) || 0, fee: Number(r.querySelector('.r-fee').value) || 0, totalAmount: r.querySelector('.r-total').value, perUnit: r.querySelector('.r-per').value, status: r.querySelector('.r-status').value };
+                    if (editId) await updateDoc(doc(db, 'purchases', editId), data);
+                    else await addDoc(collection(db, 'purchases'), data);
+                }
+                closePurModal();
+            } catch (e) { alert("Error saving"); }
+        };
+
+        // --- DROPDOWNS SETUP ---
+        onSnapshot(collection(db, 'clients'), s => {
+            let h = '<option value="">Select Account</option>', f = '<option value="">All Accounts</option>';
+            s.docs.forEach(d => { const n = d.data().accountName; h += `<option value="${n}">${n}</option>`; f += `<option value="${n}">${n}</option>`; });
+            document.getElementById('mAcc').innerHTML = h; document.getElementById('accountFilter').innerHTML = f;
+        });
+        onSnapshot(collection(db, 'warehouses'), s => { let h = '<option value="">Select Warehouse</option>'; s.docs.forEach(d => h += `<option value="${d.data().name}">${d.data().name}</option>`); document.getElementById('mWH').innerHTML = h; });
+        onSnapshot(collection(db, 'products'), s => { masterProducts = s.docs.map(d => d.data()); let opts = ''; masterProducts.forEach(p => opts += `<option value="${p.sku}">${p.name}</option>`); document.getElementById('skuData').innerHTML = opts; });
+    </script>
+</body>
+
+</html>
