@@ -29,7 +29,7 @@
             min-height: 100vh;
         }
 
-        /* Sidebar Responsive Logic */
+        /* Sidebar Logic */
         .sidebar {
             width: 260px;
             height: 100vh;
@@ -69,6 +69,24 @@
             color: white;
         }
 
+        /* Logout Button Style */
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            margin-top: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
         .main-content {
             margin-left: 260px;
             padding: 30px;
@@ -76,7 +94,6 @@
             width: calc(100% - 260px);
         }
 
-        /* KPI Cards Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -98,7 +115,6 @@
             margin-top: 5px;
         }
 
-        /* Filter Bar Responsive */
         .filter-bar {
             background: white;
             padding: 20px;
@@ -132,7 +148,6 @@
             width: 100%;
         }
 
-        /* Charts Grid */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -153,71 +168,18 @@
             width: 100%;
         }
 
-        /* Mobile Specific UI */
         @media (max-width: 992px) {
-            .sidebar {
-                width: 80px;
-                padding: 15px 10px;
-                text-align: center;
-            }
-
-            .sidebar h2,
-            .sidebar a span {
-                display: none;
-            }
-
-            /* Sirf icons dikhane ke liye (agar use kiye hon) */
-            .sidebar a {
-                text-align: center;
-                font-size: 12px;
-                padding: 10px;
-            }
-
-            .main-content {
-                margin-left: 80px;
-                width: calc(100% - 80px);
-                padding: 20px;
-            }
+            .sidebar { width: 80px; padding: 15px 10px; text-align: center; }
+            .sidebar h2, .sidebar a span, .logout-btn span { display: none; }
+            .main-content { margin-left: 80px; width: calc(100% - 80px); padding: 20px; }
         }
 
         @media (max-width: 600px) {
-            .sidebar {
-                position: relative;
-                width: 100%;
-                height: auto;
-                display: flex;
-                overflow-x: auto;
-                padding: 10px;
-                margin-bottom: 10px;
-            }
-
-            .sidebar h2 {
-                display: none;
-            }
-
-            .sidebar a {
-                margin: 0 5px;
-                white-space: nowrap;
-                margin-bottom: 0;
-            }
-
-            .main-content {
-                margin-left: 0;
-                width: 100%;
-                padding: 15px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .kpi-value {
-                font-size: 18px;
-            }
+            .sidebar { position: relative; width: 100%; height: auto; display: flex; overflow-x: auto; padding: 10px; margin-bottom: 10px; }
+            .sidebar a { margin: 0 5px; white-space: nowrap; }
+            .logout-btn { width: auto; margin-top: 0; margin-left: 10px; }
+            .main-content { margin-left: 0; width: 100%; padding: 15px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
         }
 
         .client-stock-item {
@@ -237,13 +199,15 @@
 
     <div class="sidebar">
         <h2>Rubell<span>Walmart</span></h2>
-        <a href="index.html" class="active">📊 Dashboard</a>
-        <a href="stock.html">📈 Live Stock</a>
-        <a href="orders.html">🛒 Orders</a>
-        <a href="purchases.html">💰 Purchases</a>
-        <a href="products.html">📦 Products</a>
-        <a href="clients.html">👥 Clients</a>
-        <a href="warehouse.html">🏠 Warehouses</a>
+        <a href="index.html" class="active">📊 <span>Dashboard</span></a>
+        <a href="stock.html">📈 <span>Live Stock</span></a>
+        <a href="orders.html">🛒 <span>Orders</span></a>
+        <a href="purchases.html">💰 <span>Purchases</span></a>
+        <a href="products.html">📦 <span>Products</span></a>
+        <a href="clients.html">👥 <span>Clients</span></a>
+        <a href="warehouse.html">🏠 <span>Warehouses</span></a>
+        
+        <button class="logout-btn" id="logoutBtn">🚪 <span>Logout</span></button>
     </div>
 
     <div class="main-content">
@@ -296,8 +260,10 @@
     </div>
 
     <script type="module">
+        // 1. Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBTxU9U4OW_xaEV3WZnSrpdM9Lal8TBN5c",
@@ -308,8 +274,25 @@
             appId: "1:258251635272:web:597ea77880c4ff3ef3767d"
         };
 
+        // 2. Initialize
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // 3. SECURITY GUARD: Sabse pehle login check
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // Agar user login nahi hai to login page par bhej do
+                window.location.href = "login.html";
+            }
+        });
+
+        // Logout Functionality
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = "login.html";
+            });
+        });
 
         let clients = [], products = [], purchases = [], orders = [];
         let pChart = null, dChart = null;
@@ -334,7 +317,6 @@
             let totalInStock = 0, totalRev = 0, totalProf = 0;
             let clientHTML = '';
 
-            // 1. Stock Calculation (Ye sahi chal raha hai)
             clients.forEach(client => {
                 const prefix = (client.accountName || "").toLowerCase().includes("steller") ? "ST-" : "KH-";
                 let cUnits = 0, cVal = 0;
@@ -355,29 +337,20 @@
                 }
             });
 
-            // 2. Filter Orders (Smart Check)
             const fOrders = orders.filter(o => {
                 if (selClient === 'all') return (!sD || o.date >= sD) && (!eD || o.date <= eD);
-
-                // Yahan check karein: Hum order mein 3 jagah naam dhoond rahe hain
                 const nameInOrder = (o.clientName || o.client || o.accountName || "").toString().trim().toLowerCase();
                 const nameToMatch = selClient.toString().trim().toLowerCase();
-
-                const matchesClient = (nameInOrder === nameToMatch);
-                const matchesDate = (!sD || o.date >= sD) && (!eD || o.date <= eD);
-
-                return matchesClient && matchesDate;
+                return (nameInOrder === nameToMatch) && (!sD || o.date >= sD) && (!eD || o.date <= eD);
             });
 
             const fPurchases = purchases.filter(p => (!sD || p.date >= sD) && (!eD || p.date <= eD));
 
-            // 3. Totals
             fOrders.forEach(o => {
                 totalRev += (Number(o.qty || 0) * Number(o.sellPrice || 0));
                 totalProf += Number(o.profit || 0);
             });
 
-            // 4. Update UI
             document.getElementById('topRev').innerText = `$${totalRev.toLocaleString()}`;
             document.getElementById('topProfit').innerText = `$${totalProf.toLocaleString()}`;
             document.getElementById('topUnits').innerText = totalInStock.toLocaleString();
