@@ -260,6 +260,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBTxU9U4OW_xaEV3WZnSrpdM9Lal8TBN5c",
@@ -272,8 +273,16 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
         const clientCol = collection(db, 'clients');
         let currentEditId = null;
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // Agar banda login nahi hai, to usay login page par phenk do
+                window.location.href = "login.html";
+            }
+        });
 
         window.openClientModal = () => {
             currentEditId = null;
@@ -283,7 +292,6 @@
             document.getElementById('clientModal').style.display = 'block';
         };
         window.closeClientModal = () => document.getElementById('clientModal').style.display = 'none';
-
         const resetForm = () => {
             document.querySelectorAll('input, textarea').forEach(i => i.value = '');
         };
@@ -366,3 +374,4 @@
 </body>
 
 </html>
+
