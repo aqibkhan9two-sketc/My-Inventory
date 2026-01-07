@@ -219,8 +219,15 @@
             cursor: pointer;
         }
 
-        .btn-edit { background: #dbeafe; color: #2563eb; }
-        .btn-del { background: #fee2e2; color: #dc2626; }
+        .btn-edit {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .btn-del {
+            background: #fee2e2;
+            color: #dc2626;
+        }
 
         .status-dropdown {
             padding: 5px 10px;
@@ -230,11 +237,30 @@
             font-size: 11px;
         }
 
-        .st-shipped { background: #fef3c7; color: #92400e; }
-        .st-delivered { background: #dcfce7; color: #166534; }
-        .st-ontheway { background: #dbeafe; color: #1e40af; }
-        .st-refund { background: #f3e8ff; color: #6b21a8; }
-        .st-cancelled { background: #fee2e2; color: #991b1b; }
+        .st-shipped {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .st-delivered {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .st-ontheway {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .st-refund {
+            background: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .st-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
     </style>
 </head>
 
@@ -319,17 +345,22 @@
                 <input type="hidden" id="editOrderId">
                 <div class="order-grid">
                     <div class="filter-group"><label>Date</label><input type="date" id="ordDate" required></div>
-                    <div class="filter-group"><label>Account (Client)</label><select id="ordClient" required></select></div>
-                    <div class="filter-group"><label>SKU</label><input type="text" id="ordSKU" list="skuList" required><datalist id="skuList"></datalist></div>
+                    <div class="filter-group"><label>Account (Client)</label><select id="ordClient" required></select>
+                    </div>
+                    <div class="filter-group"><label>SKU</label><input type="text" id="ordSKU" list="skuList"
+                            required><datalist id="skuList"></datalist></div>
                 </div>
 
-                <div id="skuStatus" style="display:none; background:#eff6ff; padding:15px; border-radius:8px; margin:15px 0; border-left:4px solid var(--accent);">
+                <div id="skuStatus"
+                    style="display:none; background:#eff6ff; padding:15px; border-radius:8px; margin:15px 0; border-left:4px solid var(--accent);">
                     <div style="display: flex; justify-content: space-between;">
                         <span><strong>Product:</strong> <span id="stkName">-</span></span>
                         <span><strong>Avg Cost:</strong> $<span id="stkCost">0</span></span>
                         <span><strong>Total Stock:</strong> <b id="stkTotal">0</b></span>
                     </div>
-                    <div id="whBreakdown" style="margin-top: 10px; font-size: 11px; color: #1e40af; border-top: 1px solid #dbeafe; padding-top: 5px;"></div>
+                    <div id="whBreakdown"
+                        style="margin-top: 10px; font-size: 11px; color: #1e40af; border-top: 1px solid #dbeafe; padding-top: 5px;">
+                    </div>
                 </div>
 
                 <div class="order-grid">
@@ -339,14 +370,18 @@
                 </div>
 
                 <div class="order-grid">
-                    <div class="filter-group"><label>Qty</label><input type="number" id="ordQty" value="1" min="1"></div>
+                    <div class="filter-group"><label>Qty</label><input type="number" id="ordQty" value="1" min="1">
+                    </div>
                     <div class="filter-group"><label>Warehouse</label><select id="ordWH" required></select></div>
-                    <div class="filter-group"><label>Selling Price ($)</label><input type="number" id="sellPrice" step="0.01"></div>
+                    <div class="filter-group"><label>Selling Price ($)</label><input type="number" id="sellPrice"
+                            step="0.01"></div>
                 </div>
 
                 <div class="order-grid">
-                    <div class="filter-group"><label>Label Cost</label><input type="number" id="costLabel" value="0"></div>
-                    <div class="filter-group"><label>Surcharge</label><input type="number" id="costSurcharge" value="0"></div>
+                    <div class="filter-group"><label>Label Cost</label><input type="number" id="costLabel" value="0">
+                    </div>
+                    <div class="filter-group"><label>Surcharge</label><input type="number" id="costSurcharge" value="0">
+                    </div>
                     <div class="filter-group"><label>3PL Cost</label><input type="number" id="cost3PL" value="0"></div>
                 </div>
 
@@ -359,7 +394,8 @@
 
                 <div style="margin-top:20px; display:flex; gap:10px;">
                     <button type="button" class="btn-submit" id="submitOrder">Save Order</button>
-                    <button type="button" onclick="closeOrderModal()" style="background:#64748b; color:white; border:none; padding:15px; border-radius:8px; cursor:pointer;">Close</button>
+                    <button type="button" onclick="closeOrderModal()"
+                        style="background:#64748b; color:white; border:none; padding:15px; border-radius:8px; cursor:pointer;">Close</button>
                 </div>
             </form>
         </div>
@@ -368,6 +404,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, serverTimestamp, query, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBTxU9U4OW_xaEV3WZnSrpdM9Lal8TBN5c",
@@ -380,6 +417,14 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // Agar banda login nahi hai, to usay login page par phenk do
+                window.location.href = "login.html";
+            }
+        });
 
         let globalProducts = [], globalPurchases = [], globalWarehouses = [], allOrders = [], currentlyFilteredOrders = [];
         let currentStockData = {};
@@ -425,7 +470,7 @@
                     (o.customerName || '').toLowerCase().includes(search);
                 const matchStatus = !status || o.status === status;
                 const matchClient = !client || o.client === client;
-                
+
                 // Date Range Check
                 let matchDate = true;
                 if (fromDate && o.date < fromDate) matchDate = false;
