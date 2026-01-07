@@ -169,17 +169,56 @@
         }
 
         @media (max-width: 992px) {
-            .sidebar { width: 80px; padding: 15px 10px; text-align: center; }
-            .sidebar h2, .sidebar a span, .logout-btn span { display: none; }
-            .main-content { margin-left: 80px; width: calc(100% - 80px); padding: 20px; }
+            .sidebar {
+                width: 80px;
+                padding: 15px 10px;
+                text-align: center;
+            }
+
+            .sidebar h2,
+            .sidebar a span,
+            .logout-btn span {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 80px;
+                width: calc(100% - 80px);
+                padding: 20px;
+            }
         }
 
         @media (max-width: 600px) {
-            .sidebar { position: relative; width: 100%; height: auto; display: flex; overflow-x: auto; padding: 10px; margin-bottom: 10px; }
-            .sidebar a { margin: 0 5px; white-space: nowrap; }
-            .logout-btn { width: auto; margin-top: 0; margin-left: 10px; }
-            .main-content { margin-left: 0; width: 100%; padding: 15px; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                display: flex;
+                overflow-x: auto;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+
+            .sidebar a {
+                margin: 0 5px;
+                white-space: nowrap;
+            }
+
+            .logout-btn {
+                width: auto;
+                margin-top: 0;
+                margin-left: 10px;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         .client-stock-item {
@@ -206,7 +245,7 @@
         <a href="products.html">📦 <span>Products</span></a>
         <a href="clients.html">👥 <span>Clients</span></a>
         <a href="warehouse.html">🏠 <span>Warehouses</span></a>
-        
+
         <button class="logout-btn" id="logoutBtn">🚪 <span>Logout</span></button>
     </div>
 
@@ -279,10 +318,9 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // 3. SECURITY GUARD: Sabse pehle login check
+        // 3. SECURITY GUARD: Login check
         onAuthStateChanged(auth, (user) => {
             if (!user) {
-                // Agar user login nahi hai to login page par bhej do
                 window.location.href = "login.html";
             }
         });
@@ -297,9 +335,11 @@
         let clients = [], products = [], purchases = [], orders = [];
         let pChart = null, dChart = null;
 
+        // Data Listeners
         onSnapshot(collection(db, 'clients'), s => {
             clients = s.docs.map(d => ({ id: d.id, ...d.data() }));
             const select = document.getElementById('clientFilter');
+            // Dropdown ko sirf ek baar populate karein
             if (select.options.length <= 1) {
                 clients.forEach(c => select.add(new Option(c.accountName, c.accountName)));
             }
@@ -317,31 +357,64 @@
             let totalInStock = 0, totalRev = 0, totalProf = 0;
             let clientHTML = '';
 
+            // 1. Client Portfolio Section (Stock-based Prefix Logic)
             clients.forEach(client => {
-                const prefix = (client.accountName || "").toLowerCase().includes("steller") ? "ST-" : "KH-";
+                let clientPrefix = "";
+                const cName = client.accountName.toLowerCase();
+
+                // Yahan hum define kar rahe hain ke kaunsa client kis stock prefix ko dekhega
+                if (cName.includes("steller")) {
+                    clientPrefix = "ST-";
+                } else if (cName.includes("light house") || cName.includes("lhn")) {
+                    clientPrefix = "LH-"; // Ya jo bhi aapke stock mein Light House ka prefix hai
+                } else if (cName.includes("khanco")) {
+                    clientPrefix = "KH-";
+                }
+
                 let cUnits = 0, cVal = 0;
-                products.filter(p => (p.sku || "").toUpperCase().startsWith(prefix)).forEach(prod => {
+
+                // Products ko us client ke prefix se filter karein
+                products.filter(p => (p.sku || "").toUpperCase().startsWith(clientPrefix) && clientPrefix !== "").forEach(prod => {
                     const skPur = purchases.filter(pur => pur.sku === prod.sku);
                     const qIn = skPur.reduce((a, b) => a + (+b.qty || 0), 0);
                     const qOut = orders.filter(o => o.sku === prod.sku).reduce((a, b) => a + (+b.qty || 0), 0);
+                    
                     const bal = qIn - qOut;
                     cUnits += bal;
-                    cVal += (bal * (qIn > 0 ? (skPur.reduce((a, b) => a + (+b.totalAmount || 0), 0) / qIn) : 0));
+
+                    const avgCost = qIn > 0 ? (skPur.reduce((a, b) => a + (+b.totalAmount || 0), 0) / qIn) : 0;
+                    cVal += (bal * avgCost);
                 });
+
                 if (selClient === 'all' || client.accountName === selClient) {
                     totalInStock += cUnits;
-                    clientHTML += `<div class="client-stock-item" style="border-left-color: ${prefix === 'ST-' ? '#4361ee' : '#2ecc71'}">
-                <div><b>${client.accountName}</b><span>Prefix: ${prefix}</span></div>
-                <div style="text-align:right"><b>$${cVal.toLocaleString()}</b><div>${cUnits} Units</div></div>
-            </div>`;
+                    
+                    // Border color prefix ke mutabiq change hoga
+                    let borderColor = "#2ecc71"; // Default Green
+                    if (clientPrefix === "ST-") borderColor = "#4361ee"; // Blue
+                    if (clientPrefix === "LH-") borderColor = "#e74c3c"; // Red for Light House
+
+                    clientHTML += `
+                    <div class="client-stock-item" style="border-left: 5px solid ${borderColor}">
+                        <div>
+                            <b style="font-size: 15px;">${client.accountName}</b>
+                            <div style="font-size: 11px; color: #636e72;">Detected Prefix: ${clientPrefix}</div>
+                        </div>
+                        <div style="text-align:right">
+                            <b style="font-size: 16px;">$${cVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b>
+                            <div style="font-size: 12px; font-weight: 600; color: #4361ee;">${cUnits.toLocaleString()} Units</div>
+                        </div>
+                    </div>`;
                 }
             });
 
+            // 2. Orders & KPI Section (Waisa hi rahega)
             const fOrders = orders.filter(o => {
-                if (selClient === 'all') return (!sD || o.date >= sD) && (!eD || o.date <= eD);
+                const dateMatch = (!sD || o.date >= sD) && (!eD || o.date <= eD);
+                if (selClient === 'all') return dateMatch;
                 const nameInOrder = (o.clientName || o.client || o.accountName || "").toString().trim().toLowerCase();
                 const nameToMatch = selClient.toString().trim().toLowerCase();
-                return (nameInOrder === nameToMatch) && (!sD || o.date >= sD) && (!eD || o.date <= eD);
+                return (nameInOrder === nameToMatch) && dateMatch;
             });
 
             const fPurchases = purchases.filter(p => (!sD || p.date >= sD) && (!eD || p.date <= eD));
@@ -351,11 +424,12 @@
                 totalProf += Number(o.profit || 0);
             });
 
-            document.getElementById('topRev').innerText = `$${totalRev.toLocaleString()}`;
-            document.getElementById('topProfit').innerText = `$${totalProf.toLocaleString()}`;
+            // Updating UI
+            document.getElementById('topRev').innerText = `$${totalRev.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+            document.getElementById('topProfit').innerText = `$${totalProf.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
             document.getElementById('topUnits').innerText = totalInStock.toLocaleString();
             document.getElementById('topOrders').innerText = fOrders.length;
-            document.getElementById('clientStockList').innerHTML = clientHTML;
+            document.getElementById('clientStockList').innerHTML = clientHTML || '<div style="padding:10px;">No Data Found</div>';
 
             updateCharts(fOrders, fPurchases);
         }
